@@ -26,4 +26,8 @@ public class MemberService {
         return memberRepository.findByUsername(username);
         // 일반적으로 DB에서 바로 가져오는게 좋음
     }
+
+    public Optional<Member> findByApiKey(String apiKey) {
+        return memberRepository.findByApiKey(apiKey);
+    }
 }
