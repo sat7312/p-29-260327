@@ -69,10 +69,14 @@ public class ApiV1PostController {
     public RsData<PostWriteResBody> write(
             @RequestBody @Valid PostWriteReqBody reqBody,
             @RequestParam @NotBlank @Size(min=2, max=30) String username,
-
+            @RequestParam @NotBlank @Size(min=2, max=30) String password
     ) {
 
         Member actor = memberService.findByUsername(username).get();
+
+        if(!actor.getPassword().equals(password)) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
 
         Post post = postService.write(actor, reqBody.title, reqBody.content);
         long postsCount = postService.count();
