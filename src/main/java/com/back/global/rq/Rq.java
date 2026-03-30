@@ -6,14 +6,12 @@ import com.back.global.exception.ServiceException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 @Component
-@RequestScope // 각 HTTP 요청마다 새로운 Rq 객체가 생성, 요청이 끝나면 해당 객체는 소멸
 @RequiredArgsConstructor
 public class Rq {
 
-    private final HttpServletRequest request;
+    private final HttpServletRequest request; // requestScope
     private final MemberService memberService;
 
     public Member getActor() {
@@ -21,7 +19,7 @@ public class Rq {
         String authorizationHeader = request.getHeader("Authorization");
 
         if (authorizationHeader == null) {
-            throw new ServiceException("401-1", "인증 정보가 헤더에 존제하지 않습니다.");
+            throw new ServiceException("401-1", "인증 정보가 헤더에 존재하지 않습니다.");
         }
 
         if (!authorizationHeader.startsWith("Bearer ")) {
