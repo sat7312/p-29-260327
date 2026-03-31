@@ -1,5 +1,7 @@
 package com.back.domain.member.service;
 
+import com.back.domain.member.entity.Member;
+import com.back.domain.member.repository.MemberRepository;
 import com.back.standard.Ut;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -21,6 +23,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("test")
 @Transactional
 public class AuthTokenServiceTest {
+
+
+    @Autowired
+    private MemberRepository memberRepository;
 
     @Autowired
     private AuthTokenService authTokenService;
@@ -70,5 +76,17 @@ public class AuthTokenServiceTest {
         assertThat(jwt).isNotBlank();
 
         System.out.println("jwt = " + jwt);
+    }
+
+    @Test
+    @DisplayName("AuthTokenService를 통해서 accessToken 생성")
+    void t4() {
+
+        Member member1 = memberRepository.findByUsername("user3").get();
+        String accessToken = authTokenService.genAccessToken(member1);
+        assertThat(accessToken).isNotBlank();
+
+        System.out.println("accessToken = " + accessToken);
+
     }
 }
