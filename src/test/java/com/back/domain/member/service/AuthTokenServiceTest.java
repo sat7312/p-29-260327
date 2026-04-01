@@ -2,7 +2,7 @@ package com.back.domain.member.service;
 
 import com.back.domain.member.entity.Member;
 import com.back.domain.member.repository.MemberRepository;
-import com.back.standard.Ut;
+import com.back.standard.ut.Ut;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.DisplayName;
@@ -24,15 +24,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Transactional
 public class AuthTokenServiceTest {
 
+    @Autowired
+    private AuthTokenService authTokenService;
 
     @Autowired
     private MemberRepository memberRepository;
 
-    @Autowired
-    private AuthTokenService authTokenService;
-
-    private String secretPattern= "abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz1234567890";
-    private long expireSeconds = 1000L * 60 * 60 * 24 * 365;
+    private String secretPattern = "abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz1234567890";
+    private long expireSeconds = 1000L * 60 * 60 * 24 * 365; // 1년
 
     @Test
     void t1() {
@@ -41,7 +40,7 @@ public class AuthTokenServiceTest {
 
     @Test
     @DisplayName("jjwt 최신 방식으로 JWT 생성, {name=\"Paul\", age=23}")
-    void t2() {
+    void t2() throws InterruptedException {
         // 토큰 만료기간: 1년
         long expireMillis = 1000L * 60 * 60 * 24 * 365;
 
@@ -62,10 +61,13 @@ public class AuthTokenServiceTest {
                 .signWith(secretKey) // 키 서명
                 .compact();
 
+        byte[] keyBytes2 = "abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz1234567890sdfgdfg".getBytes(StandardCharsets.UTF_8);
+        SecretKey secretKey2 = Keys.hmacShaKeyFor(keyBytes2);
+
         // jwt 확인(파싱)
         Map<String, Object> parsedPayload = (Map<String, Object>) Jwts
                 .parser()
-                .verifyWith(secretKey)
+                .verifyWith(secretKey2)
                 .build()
                 .parse(jwt)
                 .getPayload();
@@ -74,6 +76,7 @@ public class AuthTokenServiceTest {
                 .containsAllEntriesOf(payload);
 
         assertThat(jwt).isNotBlank();
+
 
         System.out.println("jwt = " + jwt);
     }
@@ -89,6 +92,9 @@ public class AuthTokenServiceTest {
 
         assertThat(jwt).isNotBlank();
 
+        boolean rst = Ut.jwt.isValid(jwt, secretPattern);
+        assertThat(rst).isTrue();
+
         System.out.println("jwt = " + jwt);
     }
 
@@ -96,7 +102,7 @@ public class AuthTokenServiceTest {
     @DisplayName("AuthTokenService를 통해서 accessToken 생성")
     void t4() {
 
-        Member member1 = memberRepository.findByUsername("user3").get();
+        Member member1 = memberRepository.findByUsername("user1").get();
         String accessToken = authTokenService.genAccessToken(member1);
         assertThat(accessToken).isNotBlank();
 

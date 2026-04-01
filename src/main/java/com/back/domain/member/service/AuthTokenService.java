@@ -1,7 +1,7 @@
 package com.back.domain.member.service;
 
 import com.back.domain.member.entity.Member;
-import com.back.standard.Ut;
+import com.back.standard.ut.Ut;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
