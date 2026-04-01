@@ -17,7 +17,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class Rq {
 
-    private final HttpServletRequest request; // requestScope
+    private final HttpServletRequest request;
     private final HttpServletResponse response;
     private final MemberService memberService;
 
@@ -28,14 +28,14 @@ public class Rq {
         String apiKey;
         String accessToken;
 
-        //헤더 방식 vs 쿠키 방식
         if (!authorizationHeader.isBlank()) {
             // 헤더 방식
             if (!authorizationHeader.startsWith("Bearer ")) {
-                throw new ServiceException("401-2", "잘못된 형식의 인증데이터 입니다.");
+                throw new ServiceException("401-2", "잘못된 형식의 인증데이터입니다.");
             }
 
-            String[] headerAuthorizationBits = authorizationHeader.split(" ", 3);
+            String[] headerAuthorizationBits = authorizationHeader.split(" ", 3);            apiKey = authorizationHeader.replace("Bearer ", "");
+
             apiKey = headerAuthorizationBits[1];
             accessToken = headerAuthorizationBits.length == 3 ? headerAuthorizationBits[2] : "";
         } else {
@@ -43,14 +43,11 @@ public class Rq {
             accessToken = getCookieValue("accessToken", "");
         }
 
-        if (apiKey.isBlank()) {
-            throw new ServiceException("401-3", "인증 정보가 유효하지 않습니다.");
-        }
-
         Member member = null;
 
-        if (apiKey.isBlank())
-            throw new ServiceException("401-1", "apiKey가 존재하지 않습니다  .");
+        if (apiKey.isBlank()) {
+            throw new ServiceException("401-1", "apiKey가 존재하지 않습니다.");
+        }
 
         if (!accessToken.isBlank()) {
             Map<String, Object> payload = memberService.payloadOrNull(accessToken);
@@ -104,6 +101,7 @@ public class Rq {
     }
 
     public void addCookie(String name, String value) {
+
         Cookie cookie = new Cookie(name, value);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
