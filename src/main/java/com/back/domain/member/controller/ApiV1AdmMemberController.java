@@ -23,10 +23,10 @@ public class ApiV1AdmMemberController {
     @GetMapping
     public List<MemberWithUsernameDto> list() {
 
-        Member actor =  rq.getActor(); // 인증
+        Member actor = rq.getActor(); // 인증
 
         // 관리자 권한 체크
-        if (!actor.isAdmin()) {
+        if (!actor.isAdmin()){
             throw new ServiceException("403-1", "권한이 없습니다.");
         }
 
