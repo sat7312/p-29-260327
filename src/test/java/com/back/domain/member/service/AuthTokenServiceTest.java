@@ -86,6 +86,5 @@ public class AuthTokenServiceTest {
         );
 
         System.out.println("accessToken = " + accessToken);
-
     }
 }

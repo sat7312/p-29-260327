@@ -63,13 +63,10 @@ public class ApiV1MemberController {
                 () -> new ServiceException("401-1", "존재하지 않는 아이디입니다.")
         );
 
-        if(!actor.getPassword().equals(reqBody.password)){
-            throw new ServiceException("401-2", "비밀번호가 일치하지 않습니다.");
-        }
-
-        rq.addCookie("apiKey", actor.getApiKey());
-
+        memberService.checkPassword(reqBody.password, actor.getPassword());
+        
         String accessToken = memberService.genAccessToken(actor);
+        rq.addCookie("apiKey", actor.getApiKey());
         rq.addCookie("accessToken", accessToken);
 
         return new RsData(
