@@ -72,9 +72,7 @@ public class ApiV1PostController {
     public RsData<PostWriteResBody> write(@RequestBody @Valid PostWriteReqBody reqBody) {
 
         Member actor = rq.getActor(); // 인증된 사용자 정보 가져오기
-
-        Member author = memberService.findById(actor.getId()).get();
-        Post post = postService.write(author, reqBody.title, reqBody.content);
+        Post post = postService.write(actor, reqBody.title, reqBody.content);
 
         return new RsData<>(
                 "%d번 게시물이 생성되었습니다.".formatted(post.getId()),
@@ -133,6 +131,7 @@ public class ApiV1PostController {
         Member actor = rq.getActor();
 
         Post post = postService.findById(id).get();
+        System.out.println(post.getAuthor().getId());
         post.checkDelete(actor);
 
         postService.deleteById(id);
