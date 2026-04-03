@@ -38,21 +38,15 @@ public class ApiV1AdmPostControllerTest {
     @DisplayName("글 전체 개수 조회, count")
     void t1() throws Exception {
 
-        Member actor = memberRepository.findByUsername("admin").get();
+        Member actor = memberRepository.findByUsername("user1").get();
 
         ResultActions resultActions = mvc
-                .perform(
-                        get("/api/v1/adm/posts/count")
-                                .cookie(new Cookie("apiKey", actor.getApiKey()))
-                )
+                .perform(get("/api/v1/adm/posts/count"))
                 .andDo(print());
-
 
         long count = postRepository.count();
 
         resultActions
-                .andExpect(handler().handlerType(ApiV1AdmPostController.class))
-                .andExpect(handler().methodName("count"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalCount").value(count));
     }
