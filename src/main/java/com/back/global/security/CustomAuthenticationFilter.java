@@ -4,6 +4,7 @@ import com.back.domain.member.entity.Member;
 import com.back.domain.member.service.MemberService;
 import com.back.global.exception.ServiceException;
 import com.back.global.rq.Rq;
+import com.back.global.rsData.RsData;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,12 +30,27 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
     private final Rq rq;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain
-    ) throws ServletException, IOException {
-        logger.info("CustomAuthenticationFilter is called");
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
+        logger.debug("CustomAuthenticationFilter is called");
+
+        try {
+            authenticate(request, response, filterChain);
+        } catch (ServiceException e) {
+            RsData<Void> rsData = e.getRsData();
+
+            response.setContentType("application/json");
+            response.setStatus(rsData.getStatusCode());
+            response.getWriter().write("""
+                    {
+                        "resultCode": "%s",
+                        "msg": "%s"
+                    }
+                    """.formatted(rsData.resultCode(), rsData.msg()));
+        }
+    }
+
+    private void authenticate(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws IOException, ServletException {
         if(!request.getRequestURI().startsWith("/api/")) {
             filterChain.doFilter(request, response);
             return;
@@ -56,8 +72,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
                 throw new ServiceException("401-2", "잘못된 형식의 인증데이터입니다.");
             }
 
-            String[] headerAuthorizationBits = authorizationHeader.split(" ", 3);
-            apiKey = authorizationHeader.replace("Bearer ", "");
+            String[] headerAuthorizationBits = authorizationHeader.split(" ", 3);            apiKey = authorizationHeader.replace("Bearer ", "");
 
             apiKey = headerAuthorizationBits[1];
             accessToken = headerAuthorizationBits.length == 3 ? headerAuthorizationBits[2] : "";
@@ -100,6 +115,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
             rq.setHeader("accessToken", newAccessToken);
         }
 
+        // SecurityContextHolder에 인증데이터 저장
         UserDetails user = new User(
                 member.getUsername(),
                 member.getPassword(),
@@ -115,6 +131,8 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         SecurityContextHolder
                 .getContext()
                 .setAuthentication(authentication);
+
+
         filterChain.doFilter(request, response);
     }
 }
