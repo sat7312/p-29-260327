@@ -12,12 +12,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -29,7 +31,10 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
     private final Rq rq;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain
+    ) throws ServletException, IOException {
 
         logger.debug("CustomAuthenticationFilter is called");
 
@@ -49,7 +54,11 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         }
     }
 
-    private void authenticate(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws IOException, ServletException {
+    private void authenticate(HttpServletRequest request,
+                              HttpServletResponse response,
+                              FilterChain filterChain
+    ) throws IOException, ServletException {
+
         if(!request.getRequestURI().startsWith("/api/")) {
             filterChain.doFilter(request, response);
             return;
@@ -70,9 +79,8 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
             if (!authorizationHeader.startsWith("Bearer ")) {
                 throw new ServiceException("401-2", "잘못된 형식의 인증데이터입니다.");
             }
-
-            String[] headerAuthorizationBits = authorizationHeader.split(" ", 3);            apiKey = authorizationHeader.replace("Bearer ", "");
-
+            String[] headerAuthorizationBits = authorizationHeader.split(" ", 3);
+            apiKey = authorizationHeader.replace("Bearer ", "");
             apiKey = headerAuthorizationBits[1];
             accessToken = headerAuthorizationBits.length == 3 ? headerAuthorizationBits[2] : "";
         } else {
@@ -85,10 +93,6 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         boolean isAccessTokenExists = !accessToken.isBlank();
         boolean isAccessTokenValid = false;
         boolean isApiKeyExists = !apiKey.isBlank();
-
-//        if (apiKey.isBlank()) {
-//            throw new ServiceException("401-1", "apiKey가 존재하지 않습니다.");
-//        }
 
         if (isAccessTokenExists) {
             Map<String, Object> payload = memberService.payloadOrNull(accessToken);
@@ -120,26 +124,28 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
             rq.setHeader("accessToken", newAccessToken);
         }
 
+        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+        SimpleGrantedAuthority authority1 = new SimpleGrantedAuthority("ROLE_ADMIN");
+        authorities.add(authority1);
+
         // SecurityContextHolder에 인증데이터 저장
         UserDetails user = new SecurityUser(
                 member.getId(),
                 member.getUsername(),
                 member.getPassword(),
                 member.getNickname(),
-                List.of()
+                member.getAuthorities()
         );
 
         Authentication authentication = new UsernamePasswordAuthenticationToken(
                 user,
-                null,
+                user.getPassword(),
                 user.getAuthorities()
         );
 
         SecurityContextHolder
                 .getContext()
                 .setAuthentication(authentication);
-
-
         filterChain.doFilter(request, response);
     }
 }
