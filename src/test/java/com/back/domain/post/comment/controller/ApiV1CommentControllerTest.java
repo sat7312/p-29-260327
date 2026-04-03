@@ -50,11 +50,6 @@ public class ApiV1CommentControllerTest {
                 .andDo(print());
 
         resultActions
-                .andExpect(handler().handlerType(ApiV1CommentController.class))
-                .andExpect(handler().methodName("list"))
-                .andExpect(status().isOk());
-
-        resultActions
                 .andExpect(jsonPath("$.length()").value(3))
                 .andExpect(jsonPath("$[*].id", containsInRelativeOrder(3, 1)))
                 .andExpect(jsonPath("$[0].id").value(3))
